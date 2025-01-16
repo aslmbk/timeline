@@ -1,11 +1,30 @@
 import { Session } from "../types";
+import { startOfDay, addDays, isWithinInterval } from "date-fns";
 
 export const getTodaySessions = (sessions: Session[]): Session[] => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const todaySessions: Session[] = [];
+  const today = startOfDay(new Date());
+  const tomorrow = addDays(today, 1);
 
-  return sessions.filter((session) => {
-    const sessionStart = new Date(session.startTime);
-    return sessionStart >= today;
+  sessions.forEach((session) => {
+    if (
+      !isWithinInterval(session.startTime, { start: today, end: tomorrow }) &&
+      !isWithinInterval(session.endTime ?? 0, { start: today, end: tomorrow })
+    ) {
+      return;
+    }
+    const newSession = { ...session };
+    if (
+      !isWithinInterval(session.endTime ?? 0, { start: today, end: tomorrow })
+    ) {
+      newSession.endTime = tomorrow.toISOString();
+    }
+    if (!isWithinInterval(session.startTime, { start: today, end: tomorrow })) {
+      newSession.startTime = today.toISOString();
+    }
+
+    todaySessions.push(newSession);
   });
+
+  return todaySessions;
 };

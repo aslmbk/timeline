@@ -2,6 +2,7 @@ export interface Activity {
   id: string;
   title: string;
   color: string;
+  type: "work" | "regular" | "sleep";
 }
 
 export interface Session {

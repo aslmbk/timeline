@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { useActivityStore } from "@/store/useActivityStore";
+import { useActivityStore, useWorkActivity } from "@/store/useActivityStore";
 import { formatDuration } from "@/utils/formatDuration";
 
 export const CurrentSession = () => {
+  const workActivity = useWorkActivity();
   const { activities, currentSession, stopSession } = useActivityStore();
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
-    if (!currentSession) return;
+    if (!currentSession || currentSession.activityId === workActivity.id) {
+      setElapsed(0);
+      return;
+    }
 
     const interval = setInterval(() => {
       const start = new Date(currentSession.startTime).getTime();
@@ -15,7 +19,7 @@ export const CurrentSession = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [currentSession]);
+  }, [currentSession, elapsed, workActivity]);
 
   const activity = useMemo(
     () =>
@@ -25,7 +29,13 @@ export const CurrentSession = () => {
     [activities, currentSession]
   );
 
-  if (!currentSession || !activity) return null;
+  if (
+    !currentSession ||
+    !activity ||
+    currentSession.activityId === workActivity.id
+  ) {
+    return null;
+  }
 
   return (
     <div

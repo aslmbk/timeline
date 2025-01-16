@@ -1,27 +1,14 @@
 import { getTodaySessions } from "@/utils/dateUtils";
-import { useActivityStore } from "@/store/useActivityStore";
+import {
+  useActivityStore,
+  useRegularActivities,
+} from "@/store/useActivityStore";
 import { formatDuration } from "@/utils/formatDuration";
 
 export const ActivityList = () => {
-  const { activities, sessions, startSession } = useActivityStore();
-
+  const activities = useRegularActivities();
+  const { sessions, startSession } = useActivityStore();
   const todaySessions = getTodaySessions(sessions);
-
-  // Находим максимальную длительность для масштабирования баров
-  const maxDuration = activities.reduce((max, activity) => {
-    const activitySessions = todaySessions.filter(
-      (session) => session.activityId === activity.id
-    );
-    const duration = activitySessions.reduce((acc, session) => {
-      if (!session.endTime) return acc;
-      return (
-        acc +
-        (new Date(session.endTime).getTime() -
-          new Date(session.startTime).getTime())
-      );
-    }, 0);
-    return Math.max(max, duration);
-  }, 0);
 
   return (
     <div className="grid gap-4">
@@ -40,10 +27,6 @@ export const ActivityList = () => {
             );
           }, 0);
 
-          const barWidth = maxDuration
-            ? (totalDuration / maxDuration) * 100
-            : 0;
-
           return (
             <div
               key={activity.id}
@@ -59,15 +42,6 @@ export const ActivityList = () => {
                   <span className="text-sm text-muted-foreground">
                     {formatDuration(totalDuration)}
                   </span>
-                </div>
-                <div className="w-full h-2 bg-background rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${barWidth}%`,
-                      backgroundColor: activity.color,
-                    }}
-                  />
                 </div>
               </div>
               <button
